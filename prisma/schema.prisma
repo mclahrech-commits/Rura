@@ -1,0 +1,437 @@
+// ============================================
+// Rura - Agricultural Platform Backend Schema
+// PostgreSQL + Prisma ORM
+//
+// Built step by step:
+// 1. Users & Roles (many-to-many)
+// 2. Products (base + category-specific details)
+// 3. Orders (multi-seller cart)
+// 4. Reviews (seller + product, tied to verified order)
+// 5. Favorites / Wishlist / Notifications
+// 6. Dashboard Analytics (product views + monthly stats)
+// 7. Livestock/Crop health logs + Weather snapshots
+// ============================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// ENUMS
+// ============================================
+
+enum RoleName {
+  MARKETPLACE // buyer only, no selling
+  FARMER      // sells crops/produce, can also buy
+  SHEPHERD    // sells livestock, can also buy
+  TRADER      // buys goods and resells them, can also buy as a regular customer
+  ADMIN
+}
+
+enum ProductCategory {
+  LIVESTOCK
+  CROPS
+  DAIRY
+  OTHER
+}
+
+enum ProductStatus {
+  ACTIVE
+  SOLD_OUT
+  ARCHIVED
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  CANCELLED
+}
+
+enum NotificationType {
+  ORDER_UPDATE
+  NEW_REVIEW
+  WISHLIST_MATCH
+  SYSTEM
+}
+
+enum LivestockHealthStatus {
+  HEALTHY
+  SICK
+  INJURED
+  RECOVERING
+}
+
+enum CropHealthStatus {
+  HEALTHY
+  DISEASED
+  PEST_ISSUE
+  DROUGHT_STRESS
+}
+
+enum CropGrowthStage {
+  SEEDLING
+  GROWING
+  FLOWERING
+  READY_TO_HARVEST
+  HARVESTED
+}
+
+// ============================================
+// 1. USERS & ROLES
+// ============================================
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  phone        String?  @unique
+  passwordHash String
+  fullName     String
+
+  wilaya       String?
+  address      String?
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  roles            UserRole[]
+  products         Product[]            @relation("SellerProducts")
+  orders           Order[]
+  reviewsWritten   Review[]             @relation("ReviewAuthor")
+  reviewsReceived  Review[]             @relation("ReviewTarget")
+  favorites        Favorite[]
+  wishlistItems    WishlistItem[]
+  notifications    Notification[]
+  productViews     ProductView[]
+  monthlyStats     SellerMonthlyStats[]
+  weatherSnapshots WeatherSnapshot[]
+}
+
+model Role {
+  id    String     @id @default(uuid())
+  name  RoleName   @unique
+
+  users UserRole[]
+}
+
+// Join table: each row means "this user has this role"
+model UserRole {
+  id     String @id @default(uuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  roleId String
+  role   Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  assignedAt DateTime @default(now())
+
+  @@unique([userId, roleId])
+  @@index([userId])
+  @@index([roleId])
+}
+
+// ============================================
+// 2. PRODUCTS (base + category-specific details)
+// ============================================
+
+model Product {
+  id          String          @id @default(uuid())
+
+  sellerId    String
+  seller      User            @relation("SellerProducts", fields: [sellerId], references: [id], onDelete: Cascade)
+
+  title       String
+  description String
+  category    ProductCategory
+  status      ProductStatus   @default(ACTIVE)
+
+  price       Decimal         @db.Decimal(10, 2)
+  currency    String          @default("DZD")
+
+  quantity    Float
+  unit        String          // e.g. "kg", "head", "liter"
+
+  wilaya      String?
+
+  images      ProductImage[]
+
+  // Only one of these will have data, depending on category
+  livestockDetails LivestockDetails?
+  cropDetails      CropDetails?
+
+  orderItems  OrderItem[]
+  reviews     Review[]
+  favorites   Favorite[]
+  views       ProductView[]
+  bestSellingIn SellerMonthlyStats[]
+
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@index([sellerId])
+  @@index([category])
+  @@index([status])
+}
+
+model ProductImage {
+  id        String  @id @default(uuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url       String
+  position  Int     @default(0)
+}
+
+model LivestockDetails {
+  productId    String  @id
+  product      Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  animalType   String  // e.g. "sheep", "cow", "goat"
+  breed        String?
+  ageMonths    Int?
+  weightKg     Float?
+  isVaccinated Boolean @default(false)
+
+  healthLogs   LivestockHealthLog[]
+}
+
+model CropDetails {
+  productId   String  @id
+  product     Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  cropType    String  // e.g. "wheat", "tomato", "dates"
+  harvestDate DateTime?
+  isOrganic   Boolean @default(false)
+
+  healthLogs  CropHealthLog[]
+}
+
+// ============================================
+// 3. ORDERS (multi-seller cart supported)
+// ============================================
+
+model Order {
+  id          String      @id @default(uuid())
+
+  buyerId     String
+  buyer       User        @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+
+  status      OrderStatus @default(PENDING)
+
+  totalAmount Decimal     @db.Decimal(10, 2)
+  currency    String      @default("DZD")
+
+  items       OrderItem[]
+  reviews     Review[]
+
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([buyerId])
+  @@index([status])
+}
+
+model OrderItem {
+  id        String  @id @default(uuid())
+
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  // product.seller tells us WHO sold this item, so one Order
+  // can naturally contain items from different sellers
+
+  quantity  Float
+  unitPrice Decimal @db.Decimal(10, 2) // price locked in at time of purchase
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+// ============================================
+// 4. REVIEWS (seller review and/or product review, tied to a real order)
+// ============================================
+
+model Review {
+  id        String   @id @default(uuid())
+
+  authorId  String
+  author    User     @relation("ReviewAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+
+  targetId  String
+  target    User     @relation("ReviewTarget", fields: [targetId], references: [id], onDelete: Cascade)
+
+  // If set: review of a specific product. If null: general seller review.
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  // Proof of purchase - review must reference a real order
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  rating    Int      // 1 to 5 (validated in the controller, not the DB)
+
+  createdAt DateTime @default(now())
+
+  @@unique([authorId, orderId, targetId, productId])
+  @@index([targetId])
+  @@index([productId])
+  @@index([orderId])
+}
+
+// ============================================
+// 5. FAVORITES, WISHLIST, NOTIFICATIONS
+// ============================================
+
+model Favorite {
+  id        String   @id @default(uuid())
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+  @@index([userId])
+  @@index([productId])
+}
+
+model WishlistItem {
+  id          String           @id @default(uuid())
+
+  userId      String
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  description String           // e.g. "Looking for organic wheat, 100kg, Djelfa area"
+  category    ProductCategory?
+
+  createdAt   DateTime         @default(now())
+
+  @@index([userId])
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title     String
+  message   String
+  type      NotificationType
+  isRead    Boolean          @default(false)
+
+  createdAt DateTime         @default(now())
+
+  @@index([userId])
+}
+
+// ============================================
+// 6. DASHBOARD ANALYTICS (Farmer/Shepherd)
+// ============================================
+
+model ProductView {
+  id        String   @id @default(uuid())
+
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  viewerId  String?  // nullable: anonymous/not-logged-in visitors can view too
+  viewer    User?    @relation(fields: [viewerId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@index([productId])
+  @@index([viewerId])
+  @@index([createdAt])
+}
+
+model SellerMonthlyStats {
+  id      String @id @default(uuid())
+
+  sellerId String
+  seller   User   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+
+  year    Int   // e.g. 2026
+  month   Int   // 1-12
+
+  totalRevenue    Decimal @db.Decimal(10, 2) @default(0)
+  totalOrders     Int     @default(0)
+  totalViews      Int     @default(0)
+  averageRating   Float?  // null if no reviews yet this month
+
+  bestSellingProductId String?
+  bestSellingProduct   Product? @relation(fields: [bestSellingProductId], references: [id], onDelete: SetNull)
+
+  updatedAt DateTime @updatedAt
+
+  @@unique([sellerId, year, month])
+  @@index([sellerId])
+}
+
+// ============================================
+// 7. LIVESTOCK/CROP HEALTH LOGS + WEATHER
+// ============================================
+
+model LivestockHealthLog {
+  id         String                @id @default(uuid())
+
+  productId  String
+  livestock  LivestockDetails      @relation(fields: [productId], references: [productId], onDelete: Cascade)
+
+  healthStatus  LivestockHealthStatus
+  staminaLevel  Int                // e.g. 0-100 scale
+  wasVetVisit   Boolean            @default(false)
+  notes         String?
+
+  checkedAt  DateTime              @default(now())
+
+  @@index([productId])
+  @@index([checkedAt])
+}
+
+model CropHealthLog {
+  id           String            @id @default(uuid())
+
+  productId    String
+  crop         CropDetails       @relation(fields: [productId], references: [productId], onDelete: Cascade)
+
+  healthStatus CropHealthStatus
+  growthStage  CropGrowthStage
+  notes        String?
+
+  checkedAt    DateTime          @default(now())
+
+  @@index([productId])
+  @@index([checkedAt])
+}
+
+model WeatherSnapshot {
+  id          String   @id @default(uuid())
+
+  farmerId    String
+  farmer      User     @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+
+  wilaya      String?
+  latitude    Float?
+  longitude   Float?
+
+  temperatureC   Float
+  humidity       Float?
+  condition      String   // e.g. "sunny", "rainy", "cloudy" - as returned by the weather API
+  windSpeedKmh   Float?
+
+  fetchedAt   DateTime @default(now())
+
+  @@index([farmerId])
+  @@index([fetchedAt])
+}
