@@ -9,7 +9,7 @@ const DISCOVER_ITEMS = [
   { label: 'How It Works', icon: '⚡' },
 ]
 
-export default function NavBar() {
+export default function NavBar({ onLoginClick }) {
   const [discoverOpen, setDiscoverOpen] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const dropRef = useRef(null)
@@ -105,14 +105,20 @@ export default function NavBar() {
         </div>
 
         {/* ── Right – Login (desktop) ── */}
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.97 }}
-          className="hidden md:flex items-center gap-2 px-5 py-2 rounded-full text-sm font-semibold shadow-md"
+        <button
+          onClick={() => {
+            console.log("Login button clicked!");
+            if (onLoginClick) {
+              onLoginClick();
+            } else {
+              alert("Wait, onLoginClick prop is missing! Please hard refresh the page.");
+            }
+          }}
+          className="hidden md:flex items-center gap-2 px-5 py-2 rounded-full text-sm font-semibold shadow-md cursor-pointer pointer-events-auto relative z-50 hover:scale-105 active:scale-95 transition-transform"
           style={{ background: '#6D2932', color: '#C7B7A3' }}
         >
           Login <span>→</span>
-        </motion.button>
+        </button>
 
         {/* ── Mobile: logo + hamburger ── */}
         <div className="flex md:hidden items-center justify-between w-full">
@@ -155,7 +161,12 @@ export default function NavBar() {
                 transition={{ delay: i * 0.06 }}
                 className="text-xl font-semibold"
                 style={{ color: '#C7B7A3' }}
-                onClick={() => setMobileOpen(false)}
+                onClick={() => {
+                  setMobileOpen(false)
+                  if (item === 'Login' && onLoginClick) {
+                    onLoginClick()
+                  }
+                }}
               >
                 {item}
               </motion.button>
