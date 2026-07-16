@@ -22,11 +22,11 @@ const LoginPage = ({ onBack }) => {
     <div className="min-h-screen flex flex-col md:flex-row bg-[#FDF9F1] font-sans selection:bg-[#6D2932]/10">
       {/* Left Panel: Visual/Brand Side */}
       <div 
-        className="relative w-full md:w-1/2 h-64 md:h-screen bg-[#6D2932] overflow-hidden"
+        className="relative w-full md:w-1/2 h-[40vh] md:h-screen bg-[#6D2932] overflow-hidden"
         onMouseMove={handleMouseMove}
         onMouseEnter={() => {
           setIsHovered(true);
-          maskSize.set(350);
+          maskSize.set(750);
         }}
         onMouseLeave={() => {
           setIsHovered(false);
@@ -43,11 +43,9 @@ const LoginPage = ({ onBack }) => {
         {/* Top Overlay Image with Motion Mask */}
         <motion.div
           className="absolute inset-0 z-0"
-          animate={{ opacity: isHovered ? 0.4 : 1 }}
-          transition={{ duration: 0.8, ease: "easeInOut" }}
           style={{
-            WebkitMaskImage: useMotionTemplate`radial-gradient(circle ${maskSize}px at ${springX}px ${springY}px, transparent 0%, black 100%)`,
-            maskImage: useMotionTemplate`radial-gradient(circle ${maskSize}px at ${springX}px ${springY}px, transparent 0%, black 100%)`
+            WebkitMaskImage: useMotionTemplate`radial-gradient(circle ${maskSize}px at ${springX}px ${springY}px, rgba(0,0,0,0.55) 0%, black 60%)`,
+            maskImage: useMotionTemplate`radial-gradient(circle ${maskSize}px at ${springX}px ${springY}px, rgba(0,0,0,0.55) 0%, black 60%)`
           }}
         >
           <img 
@@ -84,88 +82,143 @@ const LoginPage = ({ onBack }) => {
       </div>
 
       {/* Right Panel: Login Form Side */}
-      <div className="w-full md:w-1/2 flex items-center justify-center p-8 md:p-16">
-        <div className="w-full max-w-md bg-white/40 backdrop-blur-xl border border-white/20 p-8 md:p-12 rounded-[2rem] shadow-2xl shadow-[#6D2932]/5">
-          <div className="text-center mb-10">
-            <div className="w-12 h-12 mx-auto mb-6 bg-[#6D2932] rounded-md flex items-center justify-center">
-              <span className="text-white font-bold text-xl tracking-tighter">R</span>
-            </div>
-            <h2 className="text-3xl font-bold text-[#2D1619] mb-2">Welcome back to Rura</h2>
-            <p className="text-[#6D2932]/60">Manage your agricultural ecosystem</p>
+      <div className="w-full md:w-1/2 md:h-screen flex flex-col items-center justify-between p-8 md:p-16 overflow-y-auto">
+        
+        {/* Invisible spacer to balance vertical centering against the footer */}
+        <div className="hidden md:block w-full h-4 shrink-0"></div>
+
+        {/* Card Wrapper for precise positioning */}
+        <div className="relative w-full max-w-[480px] my-auto shrink-0">
+          
+          {/* Animated Flicker Border Overlay (Positioned Behind Card) */}
+          <div className="absolute inset-0 z-0 pointer-events-none">
+            {/* Top edge glow */}
+            <motion.div 
+              className="absolute -top-2 left-1/4 w-40 h-8 bg-[#ab7a44] rounded-full"
+              style={{ filter: 'blur(10px)' }}
+              animate={{ opacity: [0.15, 0.85, 0.15] }}
+              transition={{ duration: 2.3, repeat: Infinity, ease: "easeInOut" }}
+            />
+            {/* Right edge glow */}
+            <motion.div 
+              className="absolute top-1/3 -right-2 w-8 h-40 bg-[#ab7a44] rounded-full"
+              style={{ filter: 'blur(13px)' }}
+              animate={{ opacity: [0.15, 0.75, 0.15] }}
+              transition={{ duration: 3.1, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+            />
+            {/* Bottom edge glow */}
+            <motion.div 
+              className="absolute -bottom-2 left-1/3 w-[200px] h-8 bg-[#ab7a44] rounded-full"
+              style={{ filter: 'blur(10px)' }}
+              animate={{ opacity: [0.15, 0.8, 0.15] }}
+              transition={{ duration: 2.7, repeat: Infinity, ease: "easeInOut", delay: 1.1 }}
+            />
+            {/* Left edge glow */}
+            <motion.div 
+              className="absolute top-2/3 -left-2 w-8 h-40 bg-[#ab7a44] rounded-full"
+              style={{ filter: 'blur(13px)' }}
+              animate={{ opacity: [0.15, 0.8, 0.15] }}
+              transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut", delay: 0.3 }}
+            />
+            {/* Top-right corner glint */}
+            <motion.div 
+              className="absolute -top-3 -right-3 w-[60px] h-[60px] bg-[#ab7a44] rounded-full"
+              style={{ filter: 'blur(10px)' }}
+              animate={{ opacity: [0.1, 0.9, 0.1] }}
+              transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut", delay: 1.7 }}
+            />
+            {/* Bottom-left corner glint */}
+            <motion.div 
+              className="absolute -bottom-3 -left-3 w-20 h-20 bg-[#ab7a44] rounded-full"
+              style={{ filter: 'blur(13px)' }}
+              animate={{ opacity: [0.15, 0.85, 0.15] }}
+              transition={{ duration: 2.9, repeat: Infinity, ease: "easeInOut", delay: 0.8 }}
+            />
           </div>
 
-          <form 
-            className="space-y-5"
-            onSubmit={(e) => {
-              e.preventDefault();
-              // Add login logic here
-            }}
-          >
-            <div className="space-y-1">
-              <input 
-                type="text" 
-                placeholder="Email or Username"
-                className="w-full px-6 py-4 bg-[#F7F3EB] border-none rounded-2xl text-[#2D1619] placeholder-[#6D2932]/40 focus:ring-2 focus:ring-[#6D2932]/20 transition-all outline-none"
-              />
+          {/* Static Card Body (Z-10, sits on top) */}
+          <div className="relative z-10 w-full bg-white/40 backdrop-blur-xl border border-[#ab7a44]/40 p-6 md:p-10 rounded-[2rem] shadow-2xl shadow-[#6D2932]/5">
+            <div className="text-center mb-6">
+              <div className="w-10 h-10 mx-auto mb-4 bg-[#6D2932] rounded-md flex items-center justify-center">
+                <span className="text-white font-bold text-lg tracking-tighter">R</span>
+              </div>
+              <h2 className="text-2xl font-bold text-[#2D1619] mb-1">Welcome back to Rura</h2>
+              <p className="text-sm text-[#6D2932]/60">Manage your agricultural ecosystem</p>
             </div>
 
-            <div className="relative space-y-1">
-              <input 
-                type={showPassword ? "text" : "password"} 
-                placeholder="Password"
-                className="w-full px-6 py-4 bg-[#F7F3EB] border-none rounded-2xl text-[#2D1619] placeholder-[#6D2932]/40 focus:ring-2 focus:ring-[#6D2932]/20 transition-all outline-none"
-              />
+            <form 
+              className="space-y-4"
+              onSubmit={(e) => {
+                e.preventDefault();
+                // Add login logic here
+              }}
+            >
+              <div className="space-y-1">
+                <input 
+                  type="text" 
+                  placeholder="Email or Username"
+                  className="w-full px-5 py-3.5 bg-[#F7F3EB] border-none rounded-xl text-sm text-[#2D1619] placeholder-[#6D2932]/40 focus:ring-2 focus:ring-[#6D2932]/20 transition-all outline-none"
+                />
+              </div>
+
+              <div className="relative space-y-1">
+                <input 
+                  type={showPassword ? "text" : "password"} 
+                  placeholder="Password"
+                  className="w-full px-5 py-3.5 bg-[#F7F3EB] border-none rounded-xl text-sm text-[#2D1619] placeholder-[#6D2932]/40 focus:ring-2 focus:ring-[#6D2932]/20 transition-all outline-none"
+                />
+                <button 
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-5 top-3.5 text-sm font-medium text-[#6D2932]/40 hover:text-[#6D2932] transition-colors"
+                >
+                  {showPassword ? 'Hide' : 'Show'}
+                </button>
+              </div>
+
+              <div className="flex items-center justify-between text-xs py-1">
+                <label className="flex items-center gap-2 cursor-pointer text-[#6D2932]/70">
+                  <input type="checkbox" className="rounded border-[#C7B7A3] text-[#6D2932] focus:ring-[#6D2932]" />
+                  Remember me
+                </label>
+                <a href="#" className="text-[#6D2932] font-semibold hover:underline">Forgot password?</a>
+              </div>
+
               <button 
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-6 top-4 text-[#6D2932]/40 hover:text-[#6D2932] transition-colors"
+                type="submit"
+                className="w-full py-3.5 mt-1 bg-[#6D2932] text-white font-bold rounded-xl shadow-lg shadow-[#6D2932]/20 hover:scale-[1.02] active:scale-95 transition-all text-sm"
               >
-                {showPassword ? 'Hide' : 'Show'}
+                Sign In
+              </button>
+            </form>
+
+            <div className="relative my-6 text-center">
+              <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-[#C7B7A3]/30"></div></div>
+              <span className="relative px-4 bg-transparent text-[10px] font-bold uppercase tracking-widest text-[#6D2932]/40">Or continue with</span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <button className="flex items-center justify-center gap-2 py-2.5 px-4 border border-[#ab7a44]/40 rounded-xl hover:bg-white transition-colors">
+                <span className="text-sm font-semibold text-[#6D2932]">Google</span>
+              </button>
+              <button className="flex items-center justify-center gap-2 py-2.5 px-4 border border-[#ab7a44]/40 rounded-xl hover:bg-white transition-colors">
+                <span className="text-sm font-semibold text-[#6D2932]">Apple</span>
               </button>
             </div>
 
-            <div className="flex items-center justify-between text-sm py-2">
-              <label className="flex items-center gap-2 cursor-pointer text-[#6D2932]/70">
-                <input type="checkbox" className="rounded border-[#C7B7A3] text-[#6D2932] focus:ring-[#6D2932]" />
-                Remember me
-              </label>
-              <a href="#" className="text-[#6D2932] font-semibold hover:underline">Forgot password?</a>
-            </div>
-
-            <button 
-              type="submit"
-              className="w-full py-4 bg-[#6D2932] text-white font-bold rounded-2xl shadow-lg shadow-[#6D2932]/20 hover:scale-[1.02] active:scale-95 transition-all"
-            >
-              Sign In
-            </button>
-          </form>
-
-          <div className="relative my-10 text-center">
-            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-[#C7B7A3]/30"></div></div>
-            <span className="relative px-4 bg-transparent text-xs font-bold uppercase tracking-widest text-[#6D2932]/40">Or continue with</span>
+            <p className="mt-6 text-center text-xs text-[#6D2932]/60">
+              Don't have an account? <a href="#" className="text-[#6D2932] font-bold hover:underline">Sign up</a>
+            </p>
           </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <button className="flex items-center justify-center gap-3 py-3 px-4 border border-[#C7B7A3]/40 rounded-xl hover:bg-white transition-colors">
-              <span className="text-sm font-semibold">Google</span>
-            </button>
-            <button className="flex items-center justify-center gap-3 py-3 px-4 border border-[#C7B7A3]/40 rounded-xl hover:bg-white transition-colors">
-              <span className="text-sm font-semibold">Apple</span>
-            </button>
-          </div>
-
-          <p className="mt-10 text-center text-sm text-[#6D2932]/60">
-            Don't have an account? <a href="#" className="text-[#6D2932] font-bold hover:underline">Sign up</a>
-          </p>
         </div>
-      </div>
 
-      {/* Persistent Footer */}
-      <footer className="fixed bottom-8 left-1/2 -translate-x-1/2 md:left-auto md:right-16 md:translate-x-0 text-[10px] text-[#6D2932]/40 flex gap-6">
-        <a href="#" className="hover:text-[#6D2932]">Privacy Policy</a>
-        <a href="#" className="hover:text-[#6D2932]">Terms of Service</a>
-        <a href="#" className="hover:text-[#6D2932]">Support Center</a>
-      </footer>
+        {/* Persistent Footer moved inside normal flow */}
+        <footer className="w-full mt-8 flex justify-center gap-6 text-[10px] text-[#6D2932]/40 uppercase tracking-widest font-semibold shrink-0">
+          <a href="#" className="hover:text-[#6D2932] transition-colors">Privacy Policy</a>
+          <a href="#" className="hover:text-[#6D2932] transition-colors">Terms of Service</a>
+          <a href="#" className="hover:text-[#6D2932] transition-colors">Support Center</a>
+        </footer>
+      </div>
     </div>
   );
 };
