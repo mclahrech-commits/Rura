@@ -1,5 +1,5 @@
 import './index.css'
-import NavBar from './components/NavBar'
+import NavBar from './components/Navbar'
 import ScrollFrameHero from './components/ScrollFrameHero'
 import NetworkSection from './components/NetworkSection'
 import ImageStackSlider from './components/ImageStackSlider'
