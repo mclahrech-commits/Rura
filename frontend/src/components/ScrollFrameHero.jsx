@@ -22,15 +22,15 @@ function debounce(fn, ms) {
 
 export default function ScrollFrameHero() {
   const containerRef = useRef(null)
-  const canvasRef    = useRef(null)
-  const framesRef    = useRef([])
-  const targetFrame  = useRef(0)
-  const lastFrame    = useRef(-1)
-  const rafId        = useRef(null)
-  const progressRef  = useRef(0)
+  const canvasRef = useRef(null)
+  const framesRef = useRef([])
+  const targetFrame = useRef(0)
+  const lastFrame = useRef(-1)
+  const rafId = useRef(null)
+  const progressRef = useRef(0)
 
   const [loadedCount, setLoadedCount] = useState(0)
-  const [allLoaded, setAllLoaded]     = useState(false)
+  const [allLoaded, setAllLoaded] = useState(false)
 
   // ── 1. Preload all frames ─────────────────────────────────
   useEffect(() => {
@@ -54,11 +54,11 @@ export default function ScrollFrameHero() {
     const canvas = canvasRef.current
     if (!canvas) return
     const dpr = window.devicePixelRatio || 1
-    const w   = window.innerWidth
-    const h   = window.innerHeight
-    canvas.width        = w * dpr
-    canvas.height       = h * dpr
-    canvas.style.width  = `${w}px`
+    const w = window.innerWidth
+    const h = window.innerHeight
+    canvas.width = w * dpr
+    canvas.height = h * dpr
+    canvas.style.width = `${w}px`
     canvas.style.height = `${h}px`
     const ctx = canvas.getContext('2d')
     ctx.scale(dpr, dpr)
@@ -111,12 +111,12 @@ export default function ScrollFrameHero() {
       const container = containerRef.current
       if (!container) return
 
-      const rect             = container.getBoundingClientRect()
+      const rect = container.getBoundingClientRect()
       const scrollableDistance = rect.height - window.innerHeight
-      const scrolled           = -rect.top
-      let progress             = scrolled / scrollableDistance
-      progress                 = Math.min(Math.max(progress, 0), 1)
-      progressRef.current      = progress
+      const scrolled = -rect.top
+      let progress = scrolled / scrollableDistance
+      progress = Math.min(Math.max(progress, 0), 1)
+      progressRef.current = progress
 
       targetFrame.current = Math.round(progress * (TOTAL_FRAMES - 1))
     }
@@ -157,7 +157,7 @@ export default function ScrollFrameHero() {
                 className="absolute inset-y-0 left-0 rounded-full transition-all duration-100"
                 style={{
                   width: `${pct}%`,
-                  background: 'linear-gradient(90deg, #6D2932, #AB7A44)',
+                  background: 'linear-gradient(90deg, #6D2932, #ab7a44ff)',
                   boxShadow: '0 0 10px #6D2932',
                 }}
               />

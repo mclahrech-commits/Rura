@@ -8,18 +8,33 @@ import DashboardSection from './components/DashboardSection'
 import AIChatSection from './components/AIChatSection'
 import Footer from './components/Footer'
 import LoginPage from './components/LoginPage'
+import SignupPage from './components/SignupPage'
 import { useState } from 'react'
 
 export default function App() {
-  const [showLogin, setShowLogin] = useState(false)
+  const [authView, setAuthView] = useState('home') // 'home' | 'login' | 'signup'
 
-  if (showLogin) {
-    return <LoginPage onBack={() => setShowLogin(false)} />
+  if (authView === 'login') {
+    return (
+      <LoginPage 
+        onBack={() => setAuthView('home')} 
+        onSwitchToSignup={() => setAuthView('signup')} 
+      />
+    )
+  }
+
+  if (authView === 'signup') {
+    return (
+      <SignupPage 
+        onBack={() => setAuthView('home')} 
+        onSwitchToLogin={() => setAuthView('login')} 
+      />
+    )
   }
 
   return (
     <>
-      <NavBar onLoginClick={() => setShowLogin(true)} />
+      <NavBar onLoginClick={() => setAuthView('login')} />
       <ScrollFrameHero />
       <NetworkSection />
       {/* ImageStackSlider + ReviewMarquee replace the old stats block */}

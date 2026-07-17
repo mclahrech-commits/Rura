@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, useMotionValue, useSpring, useMotionTemplate } from 'framer-motion';
 
-const LoginPage = ({ onBack }) => {
+const LoginPage = ({ onBack, onSwitchToSignup }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
 
@@ -202,12 +202,18 @@ const LoginPage = ({ onBack }) => {
                 <span className="text-sm font-semibold text-[#6D2932]">Google</span>
               </button>
               <button className="flex items-center justify-center gap-2 py-2.5 px-4 border border-[#ab7a44]/40 rounded-xl hover:bg-white transition-colors">
-                <span className="text-sm font-semibold text-[#6D2932]">Apple</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="#6D2932">
+                  <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
+                </svg>
+                <span className="text-sm font-semibold text-[#6D2932]">Facebook</span>
               </button>
             </div>
 
             <p className="mt-6 text-center text-xs text-[#6D2932]/60">
-              Don't have an account? <a href="#" className="text-[#6D2932] font-bold hover:underline">Sign up</a>
+              Don't have an account?{' '}
+              <button onClick={onSwitchToSignup} type="button" className="text-[#6D2932] font-bold hover:underline">
+                Sign up
+              </button>
             </p>
           </div>
         </div>
